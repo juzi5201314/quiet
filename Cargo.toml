@@ -1,0 +1,29 @@
+[package]
+name = "quiet"
+version = "0.1.0"
+authors = ["juzi5201314 <1034236490@qq.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "2.0.0"
+actix-rt = "1.0.0"
+actix-files = "0.2.1"
+config = "0.10.1"
+once_cell = "1.3.1"
+serde = { version = "1.0.104", features = ["derive"] }
+tera = "1.1.0"
+num_cpus = "1.12.0"
+diesel = { version = "1.4.3", features = ["extras"] }
+diesel_migrations = "1.4.0"
+r2d2 = "0.8.8"
+dotenv = "0.15.0"
+parking_lot = "0.10.0"
+tokio = { version = "0.2.13", features = ["sync"] }
+
+[features]
+default = ["sqlite"]
+sqlite = ["diesel/sqlite"]
+mysql = ["diesel/mysql"]
+default-template = []
