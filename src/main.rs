@@ -1,14 +1,12 @@
 #[macro_use]
-extern crate diesel_migrations;
-#[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
-use std::collections::HashMap;
 use std::path::Path;
 
 use actix_files::Files;
-use actix_web::{App, Error as WebError, HttpResponse, HttpServer, web};
-use actix_web::http::StatusCode;
+use actix_web::{App, HttpServer, web};
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use tera::Tera;
@@ -16,9 +14,12 @@ use tera::Tera;
 use crate::config::Config;
 use crate::database::Database;
 use crate::database::sqlite::Sqlite;
+use crate::routes::*;
 
 mod config;
 mod database;
+
+mod routes;
 
 pub static CONFIG: Lazy<RwLock<Config>> = Lazy::new(|| RwLock::new(Config::load().expect("Configuration format error!")));
 
@@ -46,6 +47,11 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/")
                 .route(web::get().to(index))
             )
+            // posts 文章api
+            .service(web::resource("/posts")
+                .route(web::post().to(new_post))
+                .route(web::get().to(get_post))
+            )
             // 静态资源
             .service(Files::new("/static", Path::new(&CONFIG.read().templates_path()).join("static")).redirect_to_slash_directory())
     }).bind(CONFIG.read().listen_addr())?;
@@ -61,11 +67,7 @@ async fn main() -> std::io::Result<()> {
         .await
 }
 
-async fn index(query: web::Query<HashMap<String, String>>) -> Result<HttpResponse, WebError> {
-    let mut content = tera::Context::new();
-
-    let body = TERA.read().render("index.html", &content)
-        .map_err(|err| actix_web::error::ErrorInternalServerError(err.to_string()))?;
-
-    Ok(HttpResponse::Ok().body(body))
+#[test]
+fn add_post() {
+    DB.add_post("测试".to_owned(), "hello world<br/>2line".to_owned()).unwrap()
 }
