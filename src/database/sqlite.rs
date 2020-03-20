@@ -1,4 +1,4 @@
-use diesel::{Connection, r2d2 as diesel_r2d2, r2d2::ConnectionManager, SqliteConnection, RunQueryDsl};
+use diesel::{r2d2 as diesel_r2d2, r2d2::ConnectionManager, SqliteConnection, RunQueryDsl, QueryDsl};
 
 use crate::CONFIG;
 use crate::database::{Database, Error};
@@ -15,7 +15,7 @@ impl Sqlite {
             pool: diesel_r2d2::Pool::builder()
                 .build(ConnectionManager::<SqliteConnection>::new(CONFIG.read().database_url.as_str()))?
         };
-        super::embedded_migrations::run_with_output(&s.pool.get().unwrap(), &mut std::io::stdout());
+        super::embedded_migrations::run_with_output(&s.pool.get().unwrap(), &mut std::io::stdout()).expect("load embedded migration failed.");
         Ok(Box::new(s))
     }
 }
@@ -33,5 +33,10 @@ impl Database for Sqlite {
     fn get_posts(&self) -> Result<Vec<Post>, Error> {
         let conn = self.pool.get()?;
         Ok(posts::table.load::<Post>(&conn)?)
+    }
+
+    fn get_post(&self, post_id: i32) -> Result<Post, Error> {
+        let conn = self.pool.get()?;
+        Ok(posts::table.find(post_id).first(&conn)?)
     }
 }
