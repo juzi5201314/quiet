@@ -21,6 +21,7 @@ r2d2 = "0.8.8"
 dotenv = "0.15.0"
 parking_lot = "0.10.0"
 tokio = { version = "0.2.13", features = ["sync"] }
+chrono = "0.4.11"
 
 [features]
 default = ["sqlite"]
