@@ -1,6 +1,6 @@
-use std::time::SystemTime;
+use serde::Serialize;
 
-#[derive(Queryable)]
+#[derive(Queryable, Serialize)]
 pub struct Post {
     pub id: i32,
     pub title: String,
@@ -21,6 +21,6 @@ pub struct NewPost {
 
 impl NewPost {
     pub fn new(title: String, content: String) -> Self {
-        NewPost { title: title, content: content, create_time: SystemTime::now().elapsed().unwrap().as_secs() as i64 }
+        NewPost { title: title, content: content, create_time: chrono::Local::now().timestamp() }
     }
 }
