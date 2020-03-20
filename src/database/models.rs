@@ -21,6 +21,6 @@ pub struct NewPost {
 
 impl NewPost {
     pub fn new(title: String, content: String) -> Self {
-        NewPost { title: title, content: content, create_time: chrono::Local::now().timestamp() }
+        NewPost { title, content, create_time: chrono::Local::now().timestamp() }
     }
 }
