@@ -5,6 +5,16 @@
     <title>Title</title>
 </head>
 <body>
-hello world!
+<div>
+    hello <br/> world!
+</div>
+
+
+{% for post in posts %}
+    <h3>{{ post.title }}</h3>
+    <div>{{ post.content }}</div>
+
+    <p>id: {{ post.id }}</p>
+{% endfor %}
 </body>
 </html>
