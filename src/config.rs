@@ -1,10 +1,8 @@
 use config as config_rs;
 use config_rs::ConfigError;
-
 use serde::Deserialize;
+
 use crate::CONFIG;
-use std::ops::Deref;
-use parking_lot::RwLock;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -17,7 +15,7 @@ impl Config {
     fn new() -> Result<Self, ConfigError> {
         let mut conf = config_rs::Config::default();
         conf.merge(config::Environment::default()).unwrap();
-        conf.merge(config::File::with_name("config"));
+        conf.merge(config::File::with_name("config")).ok();
         conf.try_into::<Config>()
     }
 
