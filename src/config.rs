@@ -1,5 +1,4 @@
-use config as config_rs;
-use config_rs::ConfigError;
+use config::ConfigError;
 use serde::Deserialize;
 
 use crate::CONFIG;
@@ -13,7 +12,7 @@ pub struct Config {
 
 impl Config {
     fn new() -> Result<Self, ConfigError> {
-        let mut conf = config_rs::Config::default();
+        let mut conf = config::Config::default();
         conf.merge(config::Environment::default()).unwrap();
         conf.merge(config::File::with_name("config")).ok();
         conf.try_into::<Config>()
