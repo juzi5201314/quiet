@@ -1,6 +1,8 @@
 use serde::Serialize;
 
-#[derive(Queryable, Serialize)]
+use super::schema::posts;
+
+#[derive(Queryable, Serialize, Debug)]
 pub struct Post {
     pub id: i32,
     pub title: String,
@@ -8,8 +10,6 @@ pub struct Post {
     pub create_time: i64,
     pub comments: Option<i32>
 }
-
-use super::schema::posts;
 
 #[derive(Insertable)]
 #[table_name="posts"]
