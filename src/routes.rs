@@ -17,7 +17,7 @@ macro_rules! web_error {
 }
 
 #[derive(Deserialize)]
-pub struct LoginFormData {
+pub struct LoginData {
     pub username: String,
     pub password: String,
 }
@@ -39,13 +39,13 @@ pub async fn index(_: web::Query<HashMap<String, String>>) -> Result<HttpRespons
 }
 
 #[derive(Deserialize)]
-pub struct PostFormData {
+pub struct PostData {
     pub title: String,
     pub content: String,
 }
 
 /// POST /posts
-pub async fn new_post(data: web::Json<PostFormData>) -> Result<HttpResponse, WebError> {
+pub async fn new_post(data: web::Json<PostData>) -> Result<HttpResponse, WebError> {
     web_error!(DB.add_post(data.title.clone(), clean_html(&data.content)))?;
     Ok(HttpResponse::Found().header(header::LOCATION, "/").finish())
 }

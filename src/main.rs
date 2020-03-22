@@ -99,7 +99,7 @@ pub fn clean_html(html: &str) -> String {
 async fn add_post() {
     use actix_web::test;
 
-    let form = web::Form(PostFormData {
+    let form = web::Form(PostData {
         title: "测试2".to_string(),
         content: r#"<h2>emm</h2>hello world<br/>2line<script>alert("xss")</script>"#.to_string(),
     });
