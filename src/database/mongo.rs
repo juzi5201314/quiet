@@ -51,7 +51,8 @@ impl Database for Mongo {
                 Ok(document) => {
                     posts.push(Post {
                         id: document.get_object_id("_id").unwrap().to_hex(),
-                        title: if let Some(title) = document.get("title").and_then(Bson::as_str) {
+                        title: if let Some(title) =
+                            document.get("title").and_then(Bson::as_str) {
                             title.to_string()
                         } else {
                             String::from("unnamed")
@@ -91,17 +92,19 @@ impl Database for Mongo {
             .database(DATABASE_NAME)
             .collection(POST_COLLECTION)
             .find_one(
-                doc! { "_id":  oid::ObjectId::with_string(post_id.as_str()).unwrap() },
+                doc! { "_id":  oid::ObjectId::with_string(post_id.as_str())? },
                 None,
             )? {
             Some(document) => Ok(Post {
                 id: document.get_object_id("_id").unwrap().to_hex(),
-                title: if let Some(title) = document.get("title").and_then(Bson::as_str) {
+                title: if let Some(title) =
+                    document.get("title").and_then(Bson::as_str) {
                     title.to_string()
                 } else {
                     String::from("unnamed")
                 },
-                content: if let Some(content) = document.get("content").and_then(Bson::as_str) {
+                content: if let Some(content) =
+                    document.get("content").and_then(Bson::as_str) {
                     content.to_string()
                 } else {
                     String::new()
@@ -121,5 +124,13 @@ impl Database for Mongo {
             }),
             None => Err(Error("not found".to_string())),
         }
+    }
+
+    fn delete_post(&self, post_id: String) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn search_posts(&self, keyword: String) -> Result<Vec<Post>, Error> {
+        unimplemented!()
     }
 }

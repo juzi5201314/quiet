@@ -23,7 +23,7 @@ pub struct LoginFormData {
 }
 
 pub async fn login(session: &Session) -> Result<HttpResponse, WebError> {
-    //TODO
+    //TODO: 鉴权
     unimplemented!()
 }
 
@@ -45,7 +45,7 @@ pub struct PostFormData {
 }
 
 /// POST /posts
-pub async fn new_post(data: web::Form<PostFormData>) -> Result<HttpResponse, WebError> {
+pub async fn new_post(data: web::Json<PostFormData>) -> Result<HttpResponse, WebError> {
     web_error!(DB.add_post(data.title.clone(), clean_html(&data.content)))?;
     Ok(HttpResponse::Found().header(header::LOCATION, "/").finish())
 }

@@ -51,8 +51,18 @@ impl From<mongodb::error::Error> for Error {
     }
 }
 
+impl From<bson::oid::Error> for Error {
+    fn from(err: bson::oid::Error) -> Self { Error::from(err.to_string()) }
+}
+
 pub trait Database {
     fn add_post(&self, title: String, content: String) -> Result<(), Error>;
     fn get_posts(&self) -> Result<Vec<Post>, Error>;
     fn get_post(&self, post_id: String) -> Result<Post, Error>;
+    fn delete_post(&self, post_id: String) -> Result<(), Error>;
+    fn update_post(&self, post_id: String, new_title: String, new_content: String) -> Result<(), Error> {
+        self.delete_post(post_id)?;
+        self.add_post(new_title, new_content)
+    }
+    fn search_posts(&self, keyword: String) -> Result<Vec<Post>, Error>;
 }

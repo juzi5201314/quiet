@@ -43,4 +43,12 @@ impl Database for Sqlite {
         let conn = self.pool.get()?;
         Ok(posts::table.find(post_id).first(&conn)?)
     }
+
+    fn delete_post(&self, post_id: String) -> Result<(), Error> {
+        unimplemented!()
+    }
+
+    fn search_posts(&self, keyword: String) -> Result<Vec<Post>, Error> {
+        unimplemented!()
+    }
 }
