@@ -1,21 +1,25 @@
-use diesel::{r2d2 as diesel_r2d2, r2d2::ConnectionManager, SqliteConnection, RunQueryDsl, QueryDsl};
+use diesel::{
+    r2d2 as diesel_r2d2, r2d2::ConnectionManager, QueryDsl, RunQueryDsl, SqliteConnection,
+};
 
-use crate::CONFIG;
+use crate::database::models::{NewPost, Post};
 use crate::database::{Database, Error};
-use crate::database::models::{Post, NewPost};
+use crate::CONFIG;
 
 #[derive(Clone)]
 pub struct Sqlite {
-    pool: diesel_r2d2::Pool<ConnectionManager<SqliteConnection>>
+    pool: diesel_r2d2::Pool<ConnectionManager<SqliteConnection>>,
 }
 
 impl Sqlite {
     pub fn open() -> Result<Box<Self>, r2d2::Error> {
         let s = Sqlite {
-            pool: diesel_r2d2::Pool::builder()
-                .build(ConnectionManager::<SqliteConnection>::new(CONFIG.read().database_url.as_str()))?
+            pool: diesel_r2d2::Pool::builder().build(
+                ConnectionManager::<SqliteConnection>::new(CONFIG.read().database_url.as_str()),
+            )?,
         };
-        super::embedded_migrations::run_with_output(&s.pool.get().unwrap(), &mut std::io::stdout()).expect("load embedded migration failed.");
+        super::embedded_migrations::run_with_output(&s.pool.get().unwrap(), &mut std::io::stdout())
+            .expect("load embedded migration failed.");
         Ok(Box::new(s))
     }
 }
@@ -35,7 +39,7 @@ impl Database for Sqlite {
         Ok(posts::table.load::<Post>(&conn)?)
     }
 
-    fn get_post(&self, post_id: i32) -> Result<Post, Error> {
+    fn get_post(&self, post_id: String) -> Result<Post, Error> {
         let conn = self.pool.get()?;
         Ok(posts::table.find(post_id).first(&conn)?)
     }

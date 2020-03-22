@@ -8,7 +8,8 @@ use crate::CONFIG;
 pub struct Config {
     pub web: Option<Web>,
     pub templates: Option<Templates>,
-    pub database_url: String
+    pub database_url: String,
+    pub database_mode: String,
 }
 
 impl Config {
@@ -23,8 +24,9 @@ impl Config {
         if let Ok(path) = dotenv::from_filename(".env") {
             println!("Load .env file on {}.", path.to_str().unwrap());
         }
-        if cfg!(feature="sqlite") && std::env::var("DATABASE_URL").is_err() {
+        if cfg!(feature = "sqlite") && std::env::var("DATABASE_URL").is_err() {
             std::env::set_var("DATABASE_URL", "quiet.db");
+            std::env::set_var("DATABASE_MODE", "sqlite");
         }
         Config::new()
     }
@@ -70,11 +72,11 @@ impl Config {
 #[derive(Deserialize, Debug, Default)]
 pub struct Web {
     pub bind: Option<String>,
-    pub workers: Option<usize>
+    pub workers: Option<usize>,
 }
 
 #[derive(Deserialize, Debug, Default)]
 pub struct Templates {
     pub path: Option<String>,
-    pub static_resources: Option<String>
+    pub static_resources: Option<String>,
 }

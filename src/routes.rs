@@ -4,12 +4,11 @@
 use std::collections::HashMap;
 
 use actix_session::Session;
-use actix_web::{Error as WebError, HttpResponse, web};
 use actix_web::http::header;
+use actix_web::{web, Error as WebError, HttpResponse};
 use serde::Deserialize;
 
 use crate::{clean_html, DB, TERA};
-use actix_http::http::StatusCode;
 
 macro_rules! web_error {
     ($err:expr) => {
@@ -20,12 +19,13 @@ macro_rules! web_error {
 #[derive(Deserialize)]
 pub struct LoginFormData {
     pub username: String,
-    pub password: String
+    pub password: String,
 }
 
-// pub async fn login(session: &Session) -> Result<HttpResponse, WebError> {
-//
-// }
+pub async fn login(session: &Session) -> Result<HttpResponse, WebError> {
+    //TODO
+    unimplemented!()
+}
 
 /// GET /
 pub async fn index(_: web::Query<HashMap<String, String>>) -> Result<HttpResponse, WebError> {
@@ -41,7 +41,7 @@ pub async fn index(_: web::Query<HashMap<String, String>>) -> Result<HttpRespons
 #[derive(Deserialize)]
 pub struct PostFormData {
     pub title: String,
-    pub content: String
+    pub content: String,
 }
 
 /// POST /posts
@@ -51,9 +51,13 @@ pub async fn new_post(data: web::Form<PostFormData>) -> Result<HttpResponse, Web
 }
 
 /// GET /posts or /posts?id={postid}
-pub async fn get_post(query: web::Query<HashMap<String, String>>) -> Result<HttpResponse, WebError> {
+pub async fn get_post(
+    query: web::Query<HashMap<String, String>>,
+) -> Result<HttpResponse, WebError> {
     Ok(if query.contains_key("id") {
-        HttpResponse::Ok().json(web_error!(DB.get_post(web_error!(query.get("id").unwrap().parse::<i32>())?))?)
+        HttpResponse::Ok().json(web_error!(
+            DB.get_post(web_error!(query.get("id").unwrap().parse::<String>())?)
+        )?)
     } else {
         HttpResponse::Ok().json(web_error!(DB.get_posts())?)
     })

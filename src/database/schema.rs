@@ -1,6 +1,6 @@
 table! {
     posts (id) {
-        id -> Integer,
+        id -> Text,
         title -> Text,
         content -> Text,
         create_time -> BigInt,
