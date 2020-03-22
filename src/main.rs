@@ -15,6 +15,8 @@ use crate::config::Config;
 use crate::database::Database;
 use crate::database::sqlite::Sqlite;
 use crate::routes::*;
+use actix_session::CookieSession;
+use actix_http::cookie::SameSite;
 
 mod config;
 mod database;
@@ -23,7 +25,11 @@ mod routes;
 
 pub static CONFIG: Lazy<RwLock<Config>> = Lazy::new(|| RwLock::new(Config::load().expect("Configuration format error!")));
 
-pub static TERA: Lazy<RwLock<Tera>> = Lazy::new(|| RwLock::new(Tera::new(&format!("{}/**/*.html", CONFIG.read().templates_path())).expect("Tera Error")));
+pub static TERA: Lazy<RwLock<Tera>> = Lazy::new(|| RwLock::new({
+    let mut tera = Tera::new(&format!("{}/**/*.html", CONFIG.read().templates_path())).expect("Tera Error");
+    tera.autoescape_on(vec![]);
+    tera
+}));
 
 pub static DB: Lazy<Box<dyn Database + Send + Sync>> = Lazy::new(||
     if cfg!(feature="mysql") {
@@ -43,6 +49,12 @@ async fn main() -> std::io::Result<()> {
 
     let server = HttpServer::new(|| {
         App::new()
+            .wrap(CookieSession::private(&[0x07, 32])
+                .name("quiet")
+                .secure(false)
+                .same_site(SameSite::None)
+                .max_age(3600 * 24 * 10)
+            )
             // 首页
             .service(web::resource("/")
                 .route(web::get().to(index))
@@ -67,7 +79,21 @@ async fn main() -> std::io::Result<()> {
         .await
 }
 
-#[test]
-fn add_post() {
-    DB.add_post("测试".to_owned(), "hello world<br/>2line".to_owned()).unwrap()
+pub fn clean_html(html: &str) -> String {
+    ammonia::Builder::default()
+        .strip_comments(false)
+        .clean(html)
+        .to_string()
+}
+
+#[actix_rt::test]
+async fn add_post() {
+    use actix_web::test;
+
+    let form = web::Form(PostFormData {
+        title: "测试2".to_string(),
+        content: r#"<h2>emm</h2>hello world<br/>2line<script>alert("xss")</script>"#.to_string()
+    });
+    let resp = new_post(form).await.unwrap();
+    dbg!(resp);
 }
