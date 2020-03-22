@@ -25,6 +25,8 @@ parking_lot = "0.10.0"
 tokio = { version = "0.2.13", features = ["sync"] }
 chrono = "0.4.11"
 ammonia = "3.1.0"
+mongodb = "0.9.1"
+bson = "0.14.0"
 
 [features]
 default = ["sqlite"]

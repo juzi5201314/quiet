@@ -12,6 +12,7 @@ embed_migrations!("./migrations/mysql");
 mod schema;
 pub mod models;
 pub mod sqlite;
+pub mod mongo;
 
 #[derive(Debug)]
 pub struct Error(String);

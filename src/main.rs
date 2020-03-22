@@ -49,7 +49,7 @@ async fn main() -> std::io::Result<()> {
 
     let server = HttpServer::new(|| {
         App::new()
-            .wrap(CookieSession::private(&[0x07, 32])
+            .wrap(CookieSession::private(&[0x07; 32])
                 .name("quiet")
                 .secure(false)
                 .same_site(SameSite::None)

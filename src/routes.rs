@@ -9,6 +9,7 @@ use actix_web::http::header;
 use serde::Deserialize;
 
 use crate::{clean_html, DB, TERA};
+use actix_http::http::StatusCode;
 
 macro_rules! web_error {
     ($err:expr) => {
@@ -22,9 +23,9 @@ pub struct LoginFormData {
     pub password: String
 }
 
-pub async fn login(session: &Session) -> Result<HttpResponse, WebError> {
-
-}
+// pub async fn login(session: &Session) -> Result<HttpResponse, WebError> {
+//
+// }
 
 /// GET /
 pub async fn index(_: web::Query<HashMap<String, String>>) -> Result<HttpResponse, WebError> {
