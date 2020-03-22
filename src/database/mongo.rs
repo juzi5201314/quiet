@@ -26,7 +26,6 @@ use chrono::prelude::*;
 impl Database for Mongo {
     fn add_post(&self, title: String, content: String) -> Result<(), Error> {
         self.client
-            .clone()
             .database(DATABASE_NAME)
             .collection(POST_COLLECTION)
             .insert_one(
@@ -44,7 +43,6 @@ impl Database for Mongo {
         let mut posts = Vec::new();
         let cursor = self
             .client
-            .clone()
             .database(DATABASE_NAME)
             .collection(POST_COLLECTION)
             .find(None, None)?;
@@ -90,7 +88,6 @@ impl Database for Mongo {
     fn get_post(&self, post_id: String) -> Result<Post, Error> {
         match self
             .client
-            .clone()
             .database(DATABASE_NAME)
             .collection(POST_COLLECTION)
             .find_one(
