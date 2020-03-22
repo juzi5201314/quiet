@@ -130,6 +130,10 @@ impl Database for Mongo {
         unimplemented!()
     }
 
+    fn update_post(&self, post_id: String, new_title: String, new_content: String) -> Result<(), Error> {
+        unimplemented!()
+    }
+
     fn search_posts(&self, keyword: String) -> Result<Vec<Post>, Error> {
         unimplemented!()
     }

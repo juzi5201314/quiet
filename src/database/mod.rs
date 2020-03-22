@@ -60,9 +60,6 @@ pub trait Database {
     fn get_posts(&self) -> Result<Vec<Post>, Error>;
     fn get_post(&self, post_id: String) -> Result<Post, Error>;
     fn delete_post(&self, post_id: String) -> Result<(), Error>;
-    fn update_post(&self, post_id: String, new_title: String, new_content: String) -> Result<(), Error> {
-        self.delete_post(post_id)?;
-        self.add_post(new_title, new_content)
-    }
+    fn update_post(&self, post_id: String, new_title: String, new_content: String) -> Result<(), Error>;
     fn search_posts(&self, keyword: String) -> Result<Vec<Post>, Error>;
 }
