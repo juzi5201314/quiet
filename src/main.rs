@@ -36,7 +36,13 @@ pub static TERA: Lazy<RwLock<Tera>> = Lazy::new(|| {
 });
 
 pub static DB: Lazy<Box<dyn Database + Send + Sync>> = Lazy::new(|| {
-    match CONFIG.read().database_mode.as_ref().unwrap_or(&String::from("sqlite")).as_str() {
+    match CONFIG
+        .read()
+        .database_mode
+        .as_ref()
+        .unwrap_or(&String::from("sqlite"))
+        .as_str()
+    {
         "mysql" => unimplemented!(), // TODO: mysql
         "sqlite" => Sqlite::open().expect("sqlite connection failed."),
         "mongodb" => Mongo::open().expect("MongoDB initialization failed."),

@@ -21,7 +21,7 @@ pub enum ErrorKind {
     Other,
     R2D2, // 连接池
     Diesel,
-    Mongo
+    Mongo,
 }
 
 #[derive(Debug)]
@@ -60,7 +60,9 @@ impl From<mongodb::error::Error> for Error {
 }
 
 impl From<bson::oid::Error> for Error {
-    fn from(err: bson::oid::Error) -> Self { Error(ErrorKind::Mongo, err.to_string()) }
+    fn from(err: bson::oid::Error) -> Self {
+        Error(ErrorKind::Mongo, err.to_string())
+    }
 }
 
 pub trait Database {
@@ -68,6 +70,11 @@ pub trait Database {
     fn get_posts(&self) -> Result<Vec<Post>, Error>;
     fn get_post(&self, post_id: String) -> Result<Post, Error>;
     fn delete_post(&self, post_id: String) -> Result<(), Error>;
-    fn update_post(&self, post_id: String, title: Option<String>, content: Option<String>) -> Result<(), Error>;
+    fn update_post(
+        &self,
+        post_id: String,
+        title: Option<String>,
+        content: Option<String>,
+    ) -> Result<(), Error>;
     fn search_posts(&self, keyword: String) -> Result<Vec<Post>, Error>;
 }
