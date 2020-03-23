@@ -9,7 +9,7 @@ pub struct Config {
     pub web: Option<Web>,
     pub templates: Option<Templates>,
     pub database_url: String,
-    pub database_mode: String,
+    pub database_mode: Option<String>,
 }
 
 impl Config {

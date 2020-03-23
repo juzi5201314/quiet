@@ -36,7 +36,7 @@ pub static TERA: Lazy<RwLock<Tera>> = Lazy::new(|| {
 });
 
 pub static DB: Lazy<Box<dyn Database + Send + Sync>> = Lazy::new(|| {
-    match CONFIG.read().database_mode.as_str() {
+    match CONFIG.read().database_mode.as_ref().unwrap_or(&String::from("sqlite")).as_str() {
         "mysql" => unimplemented!(), // TODO: mysql
         "sqlite" => Sqlite::open().expect("sqlite connection failed."),
         "mongodb" => Mongo::open().expect("MongoDB initialization failed."),
@@ -99,7 +99,7 @@ pub fn clean_html(html: &str) -> String {
 async fn add_post() {
     use actix_web::test;
 
-    let form = web::Form(PostData {
+    let form = web::Json(PostData {
         title: "测试2".to_string(),
         content: r#"<h2>emm</h2>hello world<br/>2line<script>alert("xss")</script>"#.to_string(),
     });
