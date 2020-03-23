@@ -17,11 +17,19 @@ mod schema;
 pub mod sqlite;
 
 #[derive(Debug)]
-pub struct Error(String);
+pub enum ErrorKind {
+    Other,
+    R2D2, // 连接池
+    Diesel,
+    Mongo
+}
+
+#[derive(Debug)]
+pub struct Error(ErrorKind, String);
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{:?}: \"{}\"", self.0, self.1)
     }
 }
 
@@ -29,30 +37,30 @@ impl std::error::Error for Error {}
 
 impl From<String> for Error {
     fn from(s: String) -> Self {
-        Error(s)
+        Error(ErrorKind::Other, s)
     }
 }
 
 impl From<r2d2::Error> for Error {
     fn from(err: r2d2::Error) -> Self {
-        Error::from(err.to_string())
+        Error(ErrorKind::R2D2, err.to_string())
     }
 }
 
 impl From<diesel::result::Error> for Error {
     fn from(err: diesel::result::Error) -> Self {
-        Error::from(err.to_string())
+        Error(ErrorKind::Diesel, err.to_string())
     }
 }
 
 impl From<mongodb::error::Error> for Error {
     fn from(err: mongodb::error::Error) -> Self {
-        Error::from(err.kind.clone().to_string())
+        Error(ErrorKind::Mongo, err.kind.to_string())
     }
 }
 
 impl From<bson::oid::Error> for Error {
-    fn from(err: bson::oid::Error) -> Self { Error::from(err.to_string()) }
+    fn from(err: bson::oid::Error) -> Self { Error(ErrorKind::Mongo, err.to_string()) }
 }
 
 pub trait Database {
@@ -60,6 +68,6 @@ pub trait Database {
     fn get_posts(&self) -> Result<Vec<Post>, Error>;
     fn get_post(&self, post_id: String) -> Result<Post, Error>;
     fn delete_post(&self, post_id: String) -> Result<(), Error>;
-    fn update_post(&self, post_id: String, new_title: String, new_content: String) -> Result<(), Error>;
+    fn update_post(&self, post_id: String, title: Option<String>, content: Option<String>) -> Result<(), Error>;
     fn search_posts(&self, keyword: String) -> Result<Vec<Post>, Error>;
 }

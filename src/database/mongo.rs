@@ -2,7 +2,7 @@ use bson::{doc, oid, Bson};
 use mongodb::{error as mongo_error, Client};
 
 use crate::database::models::Post;
-use crate::database::{Database, Error};
+use crate::database::{Database, Error, ErrorKind};
 use crate::CONFIG;
 
 static DATABASE_NAME: &str = "quiet_db";
@@ -71,6 +71,13 @@ impl Database for Mongo {
                         } else {
                             continue;
                         },
+                        update_time: if let Some(update_time) =
+                            document.get("update_time").and_then(Bson::as_i64)
+                        {
+                            update_time
+                        } else {
+                            continue;
+                        },
                         comments: if let Some(comments) =
                             document.get("comments").and_then(Bson::as_i32)
                         {
@@ -112,7 +119,14 @@ impl Database for Mongo {
                 {
                     create_time
                 } else {
-                    return Err(Error("invalid create_time".to_string()));
+                    return Err(Error(ErrorKind::Mongo, "invalid create_time".to_string()));
+                },
+                update_time: if let Some(update_time) =
+                document.get("update_time").and_then(Bson::as_i64)
+                {
+                    update_time
+                } else {
+                    return Err(Error(ErrorKind::Mongo, "invalid create_time".to_string()));
                 },
                 comments: if let Some(comments) = document.get("comments").and_then(Bson::as_i32) {
                     Some(comments)
@@ -120,7 +134,7 @@ impl Database for Mongo {
                     None
                 },
             }),
-            None => Err(Error("not found".to_string())),
+            None => Err(Error(ErrorKind::Mongo, "not found".to_string())),
         }
     }
 
@@ -130,10 +144,19 @@ impl Database for Mongo {
         Ok(())
     }
 
-    fn update_post(&self, post_id: String, new_title: String, new_content: String) -> Result<(), Error> {
+    fn update_post(&self, post_id: String, new_title: Option<String>, new_content: Option<String>) -> Result<(), Error> {
         self.get_post_collection()
             .update_one(doc! {"_id": oid::ObjectId::with_string(post_id.as_str())?},
-                        doc! {"$set": {"title": new_title, "content": new_content}}, None)?;
+                        doc! {"$set": if new_title.is_some() && new_content.is_some() {
+                            doc! {"title": new_title.unwrap(), "content": new_content.unwrap()}
+                        } else if new_title.is_none() && new_content.is_some() {
+                            doc! {"content": new_content.unwrap()}
+                        } else if new_title.is_some() && new_content.is_none() {
+                            doc! {"title": new_title.unwrap()}
+                        } else {
+                            doc! {}
+                        }
+                        }, None)?;
         Ok(())
     }
 
@@ -168,6 +191,13 @@ impl Database for Mongo {
                         document.get("create_time").and_then(Bson::as_i64)
                         {
                             create_time
+                        } else {
+                            continue;
+                        },
+                        update_time: if let Some(update_time) =
+                        document.get("update_time").and_then(Bson::as_i64)
+                        {
+                            update_time
                         } else {
                             continue;
                         },
