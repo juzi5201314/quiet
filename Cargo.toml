@@ -27,6 +27,7 @@ chrono = "0.4.11"
 ammonia = "3.1.0"
 mongodb = "0.9.1"
 bson = "0.14.0"
+uuid = { version = "0.8.1", features = ["v4"] }
 
 [features]
 default = ["sqlite"]
