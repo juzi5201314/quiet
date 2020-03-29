@@ -12,6 +12,14 @@ pub struct Post {
     pub comments: Option<i32>,
 }
 
+#[derive(AsChangeset)]
+#[table_name = "posts"]
+pub struct UpdatePost {
+    pub title: Option<String>,
+    pub content: Option<String>,
+    pub update_time: i64
+}
+
 #[derive(Insertable)]
 #[table_name = "posts"]
 pub struct NewPost {

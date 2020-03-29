@@ -102,10 +102,23 @@ pub fn clean_html(html: &str) -> String {
 }
 
 #[actix_rt::test]
-async fn add_post() {
+async fn test_update_post() {
+    let id = "339d9052-8f51-4fd0-b164-40192ebe8ce9"; // 根据实际情况手动更改
+
+    let form = web::Json(UpdatePostData {
+        id: String::from(id),
+        title: Some("更新测试".to_string()),
+        content: None
+    });
+    let resp = update_post(form).await.unwrap();
+    dbg!(resp);
+}
+
+#[actix_rt::test]
+async fn test_add_post() {
     use actix_web::test;
 
-    let form = web::Json(PostData {
+    let form = web::Json(NewPostData {
         title: "测试2".to_string(),
         content: r#"<h2>emm</h2>hello world<br/>2line<script>alert("xss")</script>"#.to_string(),
     });

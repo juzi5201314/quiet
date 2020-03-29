@@ -1,9 +1,9 @@
 use diesel::{
     r2d2 as diesel_r2d2, r2d2::ConnectionManager, r2d2::PooledConnection, AppearsOnTable, Column,
-    ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, SqliteConnection,
+    ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, SqliteConnection
 };
 
-use crate::database::models::{NewPost, Post};
+use crate::database::models::{NewPost, Post, UpdatePost};
 use crate::database::{Database, Error, ErrorKind};
 use crate::CONFIG;
 
@@ -56,7 +56,7 @@ impl Database for Sqlite {
         if del_num != 1 {
             Err(Error(
                 ErrorKind::Other,
-                String::from("delete result not equal 1."),
+                String::from("number of deletes is not equal to 1."),
             ))
         } else {
             Ok(())
@@ -69,20 +69,15 @@ impl Database for Sqlite {
         title: Option<String>,
         content: Option<String>,
     ) -> Result<(), Error> {
-        unimplemented!();
-        /*if title.is_none() && content.is_none() {
-            return Err(Error(ErrorKind::Other, String::from("no update.")))
-        }
-
-        let uptime = posts::update_time.eq(chrono::Local::now().timestamp());
-
-        let data = Updates(vec![uptime]);
-
-        if diesel::update(posts::table.find(post_id)).set(data).execute(&self.get_conn()?)? != 1 {
-            Err(Error(ErrorKind::Other, String::from("update result not equal 1.")))
+        if diesel::update(posts::table.find(post_id)).set(&UpdatePost {
+            title,
+            content,
+            update_time: chrono::Local::now().timestamp()
+        }).execute(&self.get_conn()?)? != 1 {
+            Err(Error(ErrorKind::Other, String::from("number of updates is not equal to 1.")))
         } else {
             Ok(())
-        }*/
+        }
     }
 
     fn search_posts(&self, keyword: String) -> Result<Vec<Post>, Error> {
