@@ -1,10 +1,10 @@
 use diesel::{
     r2d2 as diesel_r2d2, r2d2::ConnectionManager, r2d2::PooledConnection, AppearsOnTable, Column,
-    ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, SqliteConnection
+    ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, SqliteConnection,
 };
 
 use crate::database::models::{NewPost, Post, UpdatePost};
-use crate::database::{Database, Error, ErrorKind};
+use crate::database::{Database, Error};
 use crate::CONFIG;
 
 #[derive(Clone)]
@@ -54,10 +54,9 @@ impl Database for Sqlite {
     fn delete_post(&self, post_id: String) -> Result<(), Error> {
         let del_num = diesel::delete(posts::table.find(post_id)).execute(&self.get_conn()?)?;
         if del_num != 1 {
-            Err(Error(
-                ErrorKind::Other,
-                String::from("number of deletes is not equal to 1."),
-            ))
+            Err(Error::Other(String::from(
+                "number of deletes is not equal to 1.",
+            )))
         } else {
             Ok(())
         }
@@ -69,12 +68,18 @@ impl Database for Sqlite {
         title: Option<String>,
         content: Option<String>,
     ) -> Result<(), Error> {
-        if diesel::update(posts::table.find(post_id)).set(&UpdatePost {
-            title,
-            content,
-            update_time: chrono::Local::now().timestamp()
-        }).execute(&self.get_conn()?)? != 1 {
-            Err(Error(ErrorKind::Other, String::from("number of updates is not equal to 1.")))
+        if diesel::update(posts::table.find(post_id))
+            .set(&UpdatePost {
+                title,
+                content,
+                update_time: chrono::Local::now().timestamp(),
+            })
+            .execute(&self.get_conn()?)?
+            != 1
+        {
+            Err(Error::Other(String::from(
+                "number of updates is not equal to 1.",
+            )))
         } else {
             Ok(())
         }

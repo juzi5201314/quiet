@@ -47,7 +47,11 @@ pub struct UpdatePostData {
 
 /// POST /posts/update
 pub async fn update_post(data: web::Json<UpdatePostData>) -> Result<HttpResponse, WebError> {
-    web_error!(DB.update_post(data.id.clone(), data.title.clone(), data.content.as_ref().map(|content| clean_html(content))))?;
+    web_error!(DB.update_post(
+        data.id.clone(),
+        data.title.clone(),
+        data.content.as_ref().map(|content| clean_html(content))
+    ))?;
     Ok(HttpResponse::Found().header(header::LOCATION, "/").finish())
 }
 

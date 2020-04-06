@@ -2,7 +2,7 @@ use bson::{doc, oid, Bson, Document};
 use mongodb::{error as mongo_error, Client};
 
 use crate::database::models::Post;
-use crate::database::{Database, Error, ErrorKind};
+use crate::database::{Database, Error};
 use crate::CONFIG;
 
 static DATABASE_NAME: &str = "quiet_db";
@@ -56,7 +56,7 @@ impl Mongo {
     }
 }
 
-use chrono::prelude::*;
+use chrono::prelude::Local;
 
 impl Database for Mongo {
     fn add_post(&self, title: String, content: String) -> Result<(), Error> {
@@ -98,13 +98,10 @@ impl Database for Mongo {
                 if let Some(p) = Mongo::parse_post_doc(document) {
                     Ok(p)
                 } else {
-                    Err(Error(
-                        ErrorKind::Mongo,
-                        "bson parsing failed".to_string(),
-                    ))
+                    Err(Error::Mongo("bson parsing failed".to_string()))
                 }
             }
-            None => Err(Error(ErrorKind::Mongo, "not found".to_string())),
+            None => Err(Error::Mongo("not found".to_string())),
         }
     }
 
@@ -131,7 +128,7 @@ impl Database for Mongo {
                     } else if new_title.is_some() && new_content.is_none() {
                         doc! {"title": new_title.unwrap(), "update_time": Local::now().timestamp()}
                     } else {
-                        return Err(Error(ErrorKind::Mongo, "two None update args(new_title, new_content) are not allowed.".to_string()));
+                        return Err(Error::Mongo("two None update args(new_title, new_content) are not allowed.".to_string()));
                     }
                 },
             None,

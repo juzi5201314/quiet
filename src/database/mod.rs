@@ -17,19 +17,21 @@ mod schema;
 pub mod sqlite;
 
 #[derive(Debug)]
-pub enum ErrorKind {
-    Other,
-    R2D2, // 连接池
-    Diesel,
-    Mongo,
+pub enum Error {
+    Other(String),
+    R2D2(String), // 连接池
+    Diesel(String),
+    Mongo(String),
 }
-
-#[derive(Debug)]
-pub struct Error(ErrorKind, String);
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}: \"{}\"", self.0, self.1)
+        match self {
+            Error::Other(e) => write!(f, "Other: \"{}\"", e),
+            Error::R2D2(e) => write!(f, "R2D2: \"{}\"", e),
+            Error::Diesel(e) => write!(f, "Diesel: \"{}\"", e),
+            Error::Mongo(e) => write!(f, "MongoDB: \"{}\"", e),
+        }
     }
 }
 
@@ -37,31 +39,31 @@ impl std::error::Error for Error {}
 
 impl From<String> for Error {
     fn from(s: String) -> Self {
-        Error(ErrorKind::Other, s)
+        Error::Other(s)
     }
 }
 
 impl From<r2d2::Error> for Error {
     fn from(err: r2d2::Error) -> Self {
-        Error(ErrorKind::R2D2, err.to_string())
+        Error::R2D2(err.to_string())
     }
 }
 
 impl From<diesel::result::Error> for Error {
     fn from(err: diesel::result::Error) -> Self {
-        Error(ErrorKind::Diesel, err.to_string())
+        Error::Diesel(err.to_string())
     }
 }
 
 impl From<mongodb::error::Error> for Error {
     fn from(err: mongodb::error::Error) -> Self {
-        Error(ErrorKind::Mongo, err.kind.to_string())
+        Error::Mongo(err.kind.to_string())
     }
 }
 
 impl From<bson::oid::Error> for Error {
     fn from(err: bson::oid::Error) -> Self {
-        Error(ErrorKind::Mongo, err.to_string())
+        Error::Mongo(err.to_string())
     }
 }
 

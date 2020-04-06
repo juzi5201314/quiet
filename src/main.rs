@@ -108,7 +108,7 @@ async fn test_update_post() {
     let form = web::Json(UpdatePostData {
         id: String::from(id),
         title: Some("更新测试".to_string()),
-        content: None
+        content: None,
     });
     let resp = update_post(form).await.unwrap();
     dbg!(resp);

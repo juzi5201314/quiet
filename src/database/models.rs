@@ -1,3 +1,4 @@
+use diesel::prelude::*;
 use serde::Serialize;
 
 use super::schema::posts;
@@ -17,7 +18,7 @@ pub struct Post {
 pub struct UpdatePost {
     pub title: Option<String>,
     pub content: Option<String>,
-    pub update_time: i64
+    pub update_time: i64,
 }
 
 #[derive(Insertable)]
