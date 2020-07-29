@@ -1,41 +1,69 @@
-use async_trait::async_trait;
+use std::ops::Deref;
+
 use anyhow::Result;
 
-use crate::database::model::post::{Post, NewPostBuilder};
+use crate::database::model::post::{NewPostBuilder, Post};
 use crate::database::mongo::MongoDB;
+use crate::database::traits::DatabaseTrait;
+use std::sync::Arc;
+
+pub mod traits;
 
 pub mod model;
 pub mod mongo;
 
-static mut DATABASE: Option<Box<dyn Database + Send + Sync>> = None;
+type DatabaseBox = Box<dyn DatabaseTrait + Send + Sync>;
 
-async fn build_database() -> Box<dyn Database + Send + Sync> {
+static mut DATABASE: Option<Arc<Database>> = None;
+
+async fn build_database() -> Database {
     let err = "Database URL is unqualified.";
     let url = env!("QUIET_DB"; required);
     let ty = url.get(..url.find(':').expect(err)).expect(err);
     match ty {
-        "mongodb" => {
-            Box::new(MongoDB::from_url(&url).await.expect(""))
-        },
-        _ => panic!("Unsupported database.")
+        "mongodb" => Database::new(
+            DatabaseType::Mongo,
+            Box::new(MongoDB::from_url(&url).await.unwrap()),
+        ),
+        _ => panic!("Unsupported database."),
     }
 }
 
-pub async fn get_db() -> &'static dyn Database {
+pub async fn init() {
     unsafe {
-        if DATABASE.is_none() {
-            DATABASE = Some(build_database().await);
-        }
-        DATABASE.as_ref().unwrap().as_ref()
+        DATABASE = Some(Arc::new(build_database().await));
+    }
+}
+
+pub fn get_db() -> Arc<Database> {
+    unsafe {
+        DATABASE.as_ref().expect("The database is not initialized.").clone()
+    }
+}
+
+pub struct Database {
+    _type: DatabaseType,
+    db: DatabaseBox,
+}
+
+impl Database {
+    fn new(ty: DatabaseType, db: DatabaseBox) -> Self {
+        Database { _type: ty, db }
     }
 
+    pub fn get_type(&self) -> &DatabaseType {
+        &self._type
+    }
 }
 
-pub trait Database: AddPost + Sync + Send {
+impl Deref for Database {
+    type Target = DatabaseBox;
 
+    fn deref(&self) -> &Self::Target {
+        &self.db
+    }
 }
 
-#[async_trait]
-pub trait AddPost {
-    async fn add_post(&self, post: NewPostBuilder) -> Result<()>;
+pub enum DatabaseType {
+    Mongo,
 }

@@ -11,6 +11,12 @@ anyhow = "1.0.31"
 dotenv = "0.15.0"
 async-trait = "0.1.36"
 once_cell = "1.4.0"
+thiserror = "1.0.20"
+byteorder = "1.3.4"
+
+[dependencies.quiet_macros]
+version = "0.1"
+path = "./quiet_macros"
 
 [dependencies.serde]
 version = "1.0.114"

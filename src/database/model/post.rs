@@ -1,11 +1,11 @@
-
-use serde::{Serialize, Deserialize};
 use anyhow::Result;
+use serde::{Deserialize, Serialize, Deserializer};
+
 use crate::database::get_db;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Post {
-    _id: String,
+    pub _id: PostId,
     /// 文章标题
     pub title: String,
     /// 文章内容
@@ -15,11 +15,11 @@ pub struct Post {
     /// 开启评论
     pub can_comment: bool,
     /// 评论id列表
-    comments: Vec<String>,
+    pub comments: Vec<PostId>,
     /// 创建时间
-    pub create_time: u64,
+    pub create_time: i32,
     /// 更新时间
-    pub update_time: u64
+    pub update_time: i32,
 }
 
 gen_model_builder!(NewPostBuilder {
@@ -33,8 +33,23 @@ gen_model_builder!(NewPostBuilder {
     can_comment: bool
 });
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum PostId {
+    String(String),
+    Number(i64),
+}
+
 impl Post {
-    pub async fn add(new_post: NewPostBuilder) -> Result<()> {
-        get_db().await.add_post(new_post).await
+    pub async fn add(new_post: NewPostBuilder) -> Result<PostId> {
+        get_db().add_post(new_post).await
+    }
+
+    pub async fn remove(&self) -> Result<bool> {
+        get_db().remove_post_with_id(self._id.clone()).await
+    }
+
+    pub async fn get_all() -> Result<Vec<Post>> {
+        get_db().get_all_posts().await
     }
 }

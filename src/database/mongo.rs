@@ -1,11 +1,17 @@
+use std::time::Duration;
+
 use anyhow::Result;
 use async_trait::async_trait;
-use mongodb::{Client, Collection};
-use mongodb::options::ClientOptions;
-use mongodb::bson::{Document, doc};
+use byteorder::{BigEndian, ByteOrder};
+use mongodb::{Client, Collection, Cursor};
+use mongodb::bson::{Bson, doc, Document, from_bson, oid::ObjectId, Array};
+use mongodb::options::{ClientOptions, FindOptions};
+use serde::export::Option::Some;
+use tokio::stream::StreamExt;
 
-use crate::database::{AddPost, Database};
-use crate::database::model::post::{NewPostBuilder, Post};
+use crate::database::model::post::{NewPostBuilder, Post, PostId};
+use crate::database::traits::{AddPost, DatabaseTrait, DelPost, GetPost};
+use crate::error::Error;
 
 pub struct MongoDB {
     client: Client,
@@ -22,32 +28,110 @@ impl MongoDB {
         let client = Client::with_options(client_options.clone())?;
 
         Ok(MongoDB {
-            db: client.database(client_options.credential.as_ref().unwrap().source.as_ref().unwrap()),
+            db: client.database(
+                client_options
+                    .credential
+                    .as_ref()
+                    .unwrap()
+                    .source
+                    .as_ref()
+                    .unwrap(),
+            ),
             client,
             client_options
         })
     }
 
-    fn get_posts_collection(&self) -> Collection{
+    fn get_posts_collection(&self) -> Collection {
         self.db.collection("posts")
     }
 }
 
-impl Database for MongoDB {
-
-}
+impl DatabaseTrait for MongoDB {}
 
 impl NewPostBuilder {
     pub fn to_doc(&self) -> Document {
-        mongodb::bson::to_bson(self).unwrap().as_document().unwrap().to_owned()
+        let mut doc = mongodb::bson::to_bson(self)
+            .unwrap()
+            .as_document()
+            .unwrap()
+            .to_owned();
+        // 补足字段
+        doc.insert("comments", Bson::Array(Array::new()));
+        doc.insert("update_time", 0i32);
+        doc
     }
 }
 
+impl Post {
+    fn from_doc(doc: &Document) -> Result<Self> {
+        let id = doc.get_object_id("_id")?;
+        let time = BigEndian::read_u32(&id.bytes()) as i32;
+        Ok(Post {
+            _id: PostId::String(id.to_string()),
+            title: doc.get_str("title")?.to_owned(),
+            body:  doc.get_str("body")?.to_owned(),
+            stick: doc.get_bool("stick")?,
+            can_comment: doc.get_bool("can_comment")?,
+            comments: doc.get_array("comments")?.iter().filter_map(
+                |b| Some(PostId::String(b.as_object_id()?.to_string()))
+            ).collect(),
+            create_time: time,
+            update_time: doc.get_i32("update_time")?
+        })
+    }
+}
+
+#[async_trait]
+impl GetPost for MongoDB {
+    async fn get_all_posts(&self) -> Result<Vec<Post>> {
+        let mut res = Vec::new();
+        let mut cursor = self.get_posts_collection().find(
+            None,
+            Some(FindOptions::builder()
+                .allow_partial_results(Some(true))
+                .batch_size(Some(100))
+                .max_time(Some(Duration::from_secs(3)))
+                .build()),
+        ).await?;
+
+        while let Some(doc) = cursor.next().await {
+            res.push(Post::from_doc(&doc?)?)
+        }
+
+        Ok(res)
+    }
+
+    async fn get_post_with_id(&self, id: PostId) -> Result<Option<Post>> {
+        unimplemented!()
+    }
+}
+
+#[async_trait]
+impl DelPost for MongoDB {
+    async fn remove_post_with_id(&self, id: PostId) -> Result<bool> {
+        if let PostId::String(id) = id {
+            let del_cpunt = self.get_posts_collection()
+                .delete_one(
+                    doc! {
+                        "_id": Bson::ObjectId(ObjectId::with_string(&id)?)
+                    },
+                    None,
+                )
+                .await?.deleted_count;
+            Ok(del_cpunt == 1)
+        } else {
+            panic!("The post id type does not match the actual database.")
+        }
+    }
+}
 
 #[async_trait]
 impl AddPost for MongoDB {
-    async fn add_post(&self, post: NewPostBuilder) -> Result<()> {
-        self.get_posts_collection().insert_one(post.to_doc(), None).await?;
-        Ok(())
+    async fn add_post(&self, post: NewPostBuilder) -> Result<PostId> {
+        let id: Bson = self.get_posts_collection()
+            .insert_one(post.to_doc(), None)
+            .await?.inserted_id;
+        Ok(PostId::String(id.as_object_id().ok_or(Error::None("ObjectId".to_owned()))?.to_string()))
     }
 }

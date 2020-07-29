@@ -1,3 +1,5 @@
+pub use quiet_macros::test;
+
 macro_rules! env {
     ($name:expr, $or:expr) => {
         std::env::var($name).unwrap_or($or)
@@ -8,7 +10,10 @@ macro_rules! env {
     };
 
     ($name:expr; required) => {
-        std::env::var($name).expect(&format!("Cannot find required environment variable {}", $name))
+        std::env::var($name).expect(&format!(
+            "Cannot find required environment variable {}",
+            $name
+        ))
     };
 }
 
