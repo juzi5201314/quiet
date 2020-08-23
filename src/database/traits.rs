@@ -8,7 +8,7 @@ pub trait DatabaseTrait: Sync + Send + PostTrait {
 }
 
 #[async_trait]
-pub trait PostTrait: AddPost + DelPost + GetPost {
+pub trait PostTrait: AddPost + DelPost + GetPost + UpdatePost {
     async fn post_count(&self) -> i64;
 }
 
@@ -26,4 +26,9 @@ pub trait DelPost {
 pub trait GetPost {
     async fn get_all_posts(&self) -> Result<Vec<Post>>;
     async fn get_post_with_id(&self, id: &PostId) -> Result<Option<Post>>;
+}
+
+#[async_trait]
+pub trait UpdatePost {
+    async fn update_post_with_id(&self, id: &PostId, post: &Post) -> Result<()>;
 }

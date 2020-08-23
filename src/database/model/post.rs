@@ -62,6 +62,10 @@ impl Post {
         }
     }
 
+    pub async fn update(&self) -> Result<()> {
+        get_db().update_post_with_id(&self._id, self).await
+    }
+
     pub async fn add(new_post: &Post) -> Result<PostId> {
         get_db().add_post(new_post).await
     }

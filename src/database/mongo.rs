@@ -5,11 +5,11 @@ use async_trait::async_trait;
 use byteorder::{BigEndian, ByteOrder};
 use mongodb::{Client, Collection, Cursor};
 use mongodb::bson::{Array, Bson, doc, Document, from_bson, oid::ObjectId, to_bson};
-use mongodb::options::{ClientOptions, FindOptions};
+use mongodb::options::{ClientOptions, FindOptions, UpdateModifications};
 use tokio::stream::StreamExt;
 
 use crate::database::model::post::{Post, PostId};
-use crate::database::traits::{AddPost, DatabaseTrait, DelPost, GetPost, PostTrait};
+use crate::database::traits::{AddPost, DatabaseTrait, DelPost, GetPost, PostTrait, UpdatePost};
 use crate::error::Error;
 
 pub struct MongoDB {
@@ -55,20 +55,6 @@ impl PostTrait for MongoDB {
 
 impl DatabaseTrait for MongoDB {}
 
-/*impl NewPostBuilder {
-    pub fn to_doc(&self) -> Document {
-        let mut doc = mongodb::bson::to_bson(self)
-            .unwrap()
-            .as_document()
-            .unwrap()
-            .to_owned();
-        // 补足字段
-        doc.insert("comments", Bson::Array(Array::new()));
-        doc.insert("update_time", 0i32);
-        doc
-    }
-}*/
-
 impl Post {
     fn from_doc(doc: &Document) -> Result<Self> {
         let id = doc.get_object_id("_id")?;
@@ -85,6 +71,22 @@ impl Post {
             create_time: time,
             update_time: doc.get_i32("update_time")?
         })
+    }
+}
+
+#[async_trait]
+impl UpdatePost for MongoDB {
+    async fn update_post_with_id(&self, id: &PostId, post: &Post) -> Result<()> {
+        self.get_posts_collection().update_one(
+            doc! { "_id": Bson::ObjectId(ObjectId::with_string(&id.to_string())?) },
+            UpdateModifications::Document({
+                let mut doc = post.to_doc()?;
+                doc.remove("_id");
+                doc
+            }),
+            None
+        ).await?;
+        Ok(())
     }
 }
 
