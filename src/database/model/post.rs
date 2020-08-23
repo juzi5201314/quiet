@@ -48,6 +48,12 @@ pub struct Post {
     pub update_time: i32,
 }
 
+impl Display for Post {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl Post {
     pub fn new(title: &str, body: &str, stick: bool, can_comment: bool) -> Self {
         let now = chrono::Local::now().timestamp();

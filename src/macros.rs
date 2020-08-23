@@ -2,7 +2,7 @@ pub use quiet_macros::test;
 
 macro_rules! env {
     ($name:expr, $or:expr) => {
-        std::env::var($name).unwrap_or($or)
+        std::env::var($name).unwrap_or(String::from($or))
     };
 
     ($name:expr) => {
