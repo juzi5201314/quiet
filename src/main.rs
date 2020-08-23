@@ -30,10 +30,11 @@ async fn test_post() -> Result<()> {
     let new_post = Post::new("标题", "内容", false, true);
     let id = Post::add(&new_post).await?;
     let post = Post::get(&id).await?.unwrap();
-
-    dbg!(&post);
-
+    let count = Post::count().await;
     assert!(post.remove().await?);
+
+    assert_eq!(&post._id, &id);
+    assert_eq!(Post::count().await, count - 1);
 
     Ok(())
 }

@@ -9,7 +9,7 @@ use mongodb::options::{ClientOptions, FindOptions};
 use tokio::stream::StreamExt;
 
 use crate::database::model::post::{Post, PostId};
-use crate::database::traits::{AddPost, DatabaseTrait, DelPost, GetPost};
+use crate::database::traits::{AddPost, DatabaseTrait, DelPost, GetPost, PostTrait};
 use crate::error::Error;
 
 pub struct MongoDB {
@@ -43,6 +43,13 @@ impl MongoDB {
 
     fn get_posts_collection(&self) -> Collection {
         self.db.collection("posts")
+    }
+}
+
+#[async_trait]
+impl PostTrait for MongoDB {
+    async fn post_count(&self) -> i64 {
+        self.get_posts_collection().estimated_document_count(None).await.unwrap_or(0)
     }
 }
 
@@ -88,6 +95,7 @@ impl GetPost for MongoDB {
         let mut cursor = self.get_posts_collection().find(
             None,
             Some(FindOptions::builder()
+                .sort(Some(doc! { "update_time": -1 }))
                 .build()),
         ).await?;
 

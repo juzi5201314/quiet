@@ -3,7 +3,14 @@ use async_trait::async_trait;
 
 use crate::database::model::post::{Post, PostId};
 
-pub trait DatabaseTrait: Sync + Send + AddPost + DelPost + GetPost {}
+pub trait DatabaseTrait: Sync + Send + PostTrait {
+
+}
+
+#[async_trait]
+pub trait PostTrait: AddPost + DelPost + GetPost {
+    async fn post_count(&self) -> i64;
+}
 
 #[async_trait]
 pub trait AddPost {

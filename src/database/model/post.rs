@@ -6,7 +6,7 @@ use crate::database::get_db;
 
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(untagged)]
 pub enum PostId {
     String(String),
@@ -76,6 +76,10 @@ impl Post {
 
     pub async fn get(id: &PostId) -> Result<Option<Post>> {
         get_db().get_post_with_id(id).await
+    }
+
+    pub async fn count() -> i64 {
+        get_db().post_count().await
     }
 
     pub fn to_doc(&self) -> Result<Document> {
