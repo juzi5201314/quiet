@@ -26,25 +26,14 @@ async fn get_posts() -> Result<()> {
 }
 
 #[macros::test]
-async fn del_post() -> Result<()> {
-    //Post::remove(q).await?;
+async fn test_post() -> Result<()> {
+    let new_post = Post::new("标题", "内容", false, true);
+    let id = Post::add(&new_post).await?;
+    let post = Post::get(&id).await?.unwrap();
 
-    Ok(())
-}
+    dbg!(&post);
 
-#[macros::test]
-async fn add_post() -> Result<()> {
-    let new_post = Post {
-        title: "标题".to_owned(),
-        body: "内容".to_owned(),
-        stick: false,
-        can_comment: true,
-        create_time: 0,
-        update_time: 0,
-        ..Default::default()
-    };
-
-    Post::add(new_post).await?;
+    assert!(post.remove().await?);
 
     Ok(())
 }

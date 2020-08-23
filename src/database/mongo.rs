@@ -4,7 +4,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use byteorder::{BigEndian, ByteOrder};
 use mongodb::{Client, Collection, Cursor};
-use mongodb::bson::{Array, Bson, doc, Document, from_bson, oid::ObjectId};
+use mongodb::bson::{Array, Bson, doc, Document, from_bson, oid::ObjectId, to_bson};
 use mongodb::options::{ClientOptions, FindOptions};
 use tokio::stream::StreamExt;
 
@@ -20,7 +20,7 @@ pub struct MongoDB {
 
 impl MongoDB {
     pub async fn from_url(url: &str) -> Result<Self> {
-        let mut client_options = ClientOptions::parse(&url).await?;
+        let client_options = ClientOptions::parse(&url).await?;
         if client_options.credential.is_none() {
             panic!("For security, mongodb must fill in the credential.");
         }
@@ -88,9 +88,6 @@ impl GetPost for MongoDB {
         let mut cursor = self.get_posts_collection().find(
             None,
             Some(FindOptions::builder()
-                .allow_partial_results(Some(true))
-                .batch_size(Some(100))
-                .max_time(Some(Duration::from_secs(3)))
                 .build()),
         ).await?;
 
@@ -101,33 +98,31 @@ impl GetPost for MongoDB {
         Ok(res)
     }
 
-    async fn get_post_with_id(&self, id: PostId) -> Result<Option<Post>> {
-        unimplemented!()
+    async fn get_post_with_id(&self, id: &PostId) -> Result<Option<Post>> {
+        Ok(self.get_posts_collection().find_one(doc! {
+            "_id": Bson::ObjectId(ObjectId::with_string(&id.to_string())?)
+        }, None).await?.map(|doc: Document| Post::from_doc(&doc).unwrap()))
     }
 }
 
 #[async_trait]
 impl DelPost for MongoDB {
-    async fn remove_post_with_id(&self, id: PostId) -> Result<bool> {
-        if let PostId::String(id) = id {
-            let del_cpunt = self.get_posts_collection()
-                .delete_one(
-                    doc! {
-                        "_id": Bson::ObjectId(ObjectId::with_string(&id)?)
+    async fn remove_post_with_id(&self, id: &PostId) -> Result<bool> {
+        let del_cpunt = self.get_posts_collection()
+            .delete_one(
+                doc! {
+                        "_id": Bson::ObjectId(ObjectId::with_string(&id.to_string())?)
                     },
-                    None,
-                )
-                .await?.deleted_count;
-            Ok(del_cpunt == 1)
-        } else {
-            panic!("The post id type does not match the actual database.")
-        }
+                None,
+            )
+            .await?.deleted_count;
+        Ok(del_cpunt == 1)
     }
 }
 
 #[async_trait]
 impl AddPost for MongoDB {
-    async fn add_post(&self, post: Post) -> Result<PostId> {
+    async fn add_post(&self, post: &Post) -> Result<PostId> {
         let id: Bson = self.get_posts_collection()
             .insert_one(post.to_doc()?, None)
             .await?.inserted_id;
