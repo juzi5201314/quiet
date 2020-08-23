@@ -28,6 +28,15 @@ impl Default for PostId {
     }
 }
 
+impl From<&str> for PostId {
+    fn from(s: &str) -> Self {
+        if let Ok(i) = s.parse::<i64>() {
+            PostId::Number(i)
+        } else {
+            PostId::String(s.to_owned())
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Post {

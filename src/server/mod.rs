@@ -1,13 +1,18 @@
-use actix_web::{App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use anyhow::Result;
 
-use crate::server::routes::index;
+use crate::server::routes::{index, editor, edit_post};
 
 mod template;
 mod routes;
 
 pub async fn start() -> Result<()> {
-    Ok(HttpServer::new(|| App::new().service(index))
+    Ok(HttpServer::new(|| App::new()
+        .service(index)
+        .service(editor)
+        .service(web::scope("/api")
+            .service(edit_post))
+    )
         .bind(env!("QUIET_ADDR", "127.0.0.1:7070"))?
         .run()
         .await?)
