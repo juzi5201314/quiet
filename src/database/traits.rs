@@ -20,6 +20,7 @@ pub trait AddPost {
 #[async_trait]
 pub trait DelPost {
     async fn remove_post_with_id(&self, id: &PostId) -> Result<bool>;
+    async fn remove_posts_with_id_list(&self, ids: Vec<&PostId>) -> Result<bool>;
 }
 
 #[async_trait]

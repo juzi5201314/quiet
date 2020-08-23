@@ -11,6 +11,7 @@ use tokio::stream::StreamExt;
 use crate::database::model::post::{Post, PostId};
 use crate::database::traits::{AddPost, DatabaseTrait, DelPost, GetPost, PostTrait, UpdatePost};
 use crate::error::Error;
+use tokio::macros::support::Future;
 
 pub struct MongoDB {
     client: Client,
@@ -46,13 +47,6 @@ impl MongoDB {
     }
 }
 
-#[async_trait]
-impl PostTrait for MongoDB {
-    async fn post_count(&self) -> i64 {
-        self.get_posts_collection().estimated_document_count(None).await.unwrap_or(0)
-    }
-}
-
 impl DatabaseTrait for MongoDB {}
 
 impl Post {
@@ -71,6 +65,13 @@ impl Post {
             create_time: time,
             update_time: doc.get_i32("update_time")?
         })
+    }
+}
+
+#[async_trait]
+impl PostTrait for MongoDB {
+    async fn post_count(&self) -> i64 {
+        self.get_posts_collection().estimated_document_count(None).await.unwrap_or(0)
     }
 }
 
@@ -127,6 +128,21 @@ impl DelPost for MongoDB {
             )
             .await?.deleted_count;
         Ok(del_cpunt == 1)
+    }
+
+    async fn remove_posts_with_id_list(&self, ids: Vec<&PostId>) -> Result<bool> {
+        for res in futures::future::join_all({
+            let mut v = Vec::new();
+            for id in ids {
+                v.push(self.remove_post_with_id(id))
+            }
+            v
+        }).await {
+            if !res? {
+                return Ok(false)
+            }
+        }
+        Ok(true)
     }
 }
 

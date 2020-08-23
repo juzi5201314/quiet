@@ -2,9 +2,6 @@ use std::ops::Add;
 
 use anyhow::Result;
 
-use crate::database::model::post::{Post, PostId};
-use crate::database::get_db;
-
 #[macro_use]
 pub mod macros;
 mod error;
@@ -15,13 +12,11 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     database::init().await;
 
-    let mut p = Post::get(&PostId::String(String::from("5f41eda000b97cb400f4353c"))).await?.unwrap();
-    p.title = "标题".to_owned();
-    p.body = "🙌".to_owned();
-    p.update().await?;
-
     Ok(())
 }
+
+#[test]
+use crate::database::model::post::{Post, PostId};
 
 #[macros::test]
 async fn get_posts() -> Result<()> {
