@@ -4,12 +4,11 @@ use anyhow::Result;
 use async_trait::async_trait;
 use byteorder::{BigEndian, ByteOrder};
 use mongodb::{Client, Collection, Cursor};
-use mongodb::bson::{Bson, doc, Document, from_bson, oid::ObjectId, Array};
+use mongodb::bson::{Array, Bson, doc, Document, from_bson, oid::ObjectId};
 use mongodb::options::{ClientOptions, FindOptions};
-use serde::export::Option::Some;
 use tokio::stream::StreamExt;
 
-use crate::database::model::post::{NewPostBuilder, Post, PostId};
+use crate::database::model::post::{Post, PostId};
 use crate::database::traits::{AddPost, DatabaseTrait, DelPost, GetPost};
 use crate::error::Error;
 
@@ -49,7 +48,7 @@ impl MongoDB {
 
 impl DatabaseTrait for MongoDB {}
 
-impl NewPostBuilder {
+/*impl NewPostBuilder {
     pub fn to_doc(&self) -> Document {
         let mut doc = mongodb::bson::to_bson(self)
             .unwrap()
@@ -61,7 +60,7 @@ impl NewPostBuilder {
         doc.insert("update_time", 0i32);
         doc
     }
-}
+}*/
 
 impl Post {
     fn from_doc(doc: &Document) -> Result<Self> {
@@ -128,9 +127,9 @@ impl DelPost for MongoDB {
 
 #[async_trait]
 impl AddPost for MongoDB {
-    async fn add_post(&self, post: NewPostBuilder) -> Result<PostId> {
+    async fn add_post(&self, post: Post) -> Result<PostId> {
         let id: Bson = self.get_posts_collection()
-            .insert_one(post.to_doc(), None)
+            .insert_one(post.to_doc()?, None)
             .await?.inserted_id;
         Ok(PostId::String(id.as_object_id().ok_or(Error::None("ObjectId".to_owned()))?.to_string()))
     }

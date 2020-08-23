@@ -17,7 +17,7 @@ macro_rules! env {
     };
 }
 
-macro_rules! gen_model_builder {
+/*macro_rules! gen_model_builder {
     ($name:ident {$($field:ident: $type:ty),*}) => {
         #[derive(Default, Debug, ::serde::Serialize, ::serde::Deserialize)]
         pub struct $name {
@@ -39,4 +39,4 @@ macro_rules! gen_model_builder {
             )*
         }
     };
-}
+}*/

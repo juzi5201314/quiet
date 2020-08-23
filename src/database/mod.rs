@@ -1,11 +1,11 @@
 use std::ops::Deref;
+use std::sync::Arc;
 
 use anyhow::Result;
 
-use crate::database::model::post::{NewPostBuilder, Post};
+use crate::database::model::post::Post;
 use crate::database::mongo::MongoDB;
 use crate::database::traits::DatabaseTrait;
-use std::sync::Arc;
 
 pub mod traits;
 

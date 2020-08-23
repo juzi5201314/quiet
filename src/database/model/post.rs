@@ -1,9 +1,10 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize, Deserializer};
+use mongodb::bson::{Document, to_bson};
 
 use crate::database::get_db;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Post {
     pub _id: PostId,
     /// 文章标题
@@ -22,17 +23,6 @@ pub struct Post {
     pub update_time: i32,
 }
 
-gen_model_builder!(NewPostBuilder {
-    // 文章标题
-    title: String,
-    // 文章内容
-    body: String,
-    // 顶置
-    stick: bool,
-    // 开启评论
-    can_comment: bool
-});
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum PostId {
@@ -40,8 +30,14 @@ pub enum PostId {
     Number(i64),
 }
 
+impl Default for PostId {
+    fn default() -> Self {
+        PostId::Number(0)
+    }
+}
+
 impl Post {
-    pub async fn add(new_post: NewPostBuilder) -> Result<PostId> {
+    pub async fn add(new_post: Post) -> Result<PostId> {
         get_db().add_post(new_post).await
     }
 
@@ -51,5 +47,12 @@ impl Post {
 
     pub async fn get_all() -> Result<Vec<Post>> {
         get_db().get_all_posts().await
+    }
+
+    pub fn to_doc(&self) -> Result<Document> {
+        let mut doc = to_bson(self).map(|b| b.as_document().expect("Cannot convert `Post` to document").to_owned())?;
+        // 去掉_id字段，避免数据库不自动生成id
+        doc.remove("_id");
+        Ok(doc)
     }
 }

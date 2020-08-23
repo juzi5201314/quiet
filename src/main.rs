@@ -2,13 +2,11 @@ use std::ops::Add;
 
 use anyhow::Result;
 
-use crate::database::model::post::{NewPostBuilder, Post};
+use crate::database::model::post::Post;
 
 #[macro_use]
 pub mod macros;
-
 mod error;
-
 mod database;
 
 #[tokio::main(threaded_scheduler)]
@@ -36,11 +34,15 @@ async fn del_post() -> Result<()> {
 
 #[macros::test]
 async fn add_post() -> Result<()> {
-    let new_post = NewPostBuilder::new()
-        .title("标题".to_owned())
-        .body("内容".to_owned())
-        .can_comment(true)
-        .stick(false);
+    let new_post = Post {
+        title: "标题".to_owned(),
+        body: "内容".to_owned(),
+        stick: false,
+        can_comment: true,
+        create_time: 0,
+        update_time: 0,
+        ..Default::default()
+    };
 
     Post::add(new_post).await?;
 

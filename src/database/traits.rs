@@ -1,13 +1,13 @@
 use anyhow::Result;
 use async_trait::async_trait;
 
-use crate::database::model::post::{NewPostBuilder, Post, PostId};
+use crate::database::model::post::{Post, PostId};
 
 pub trait DatabaseTrait: Sync + Send + AddPost + DelPost + GetPost {}
 
 #[async_trait]
 pub trait AddPost {
-    async fn add_post(&self, post: NewPostBuilder) -> Result<PostId>;
+    async fn add_post(&self, post: Post) -> Result<PostId>;
 }
 
 #[async_trait]
