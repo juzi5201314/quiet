@@ -1,10 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <title>Editor</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+          integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/editor.md/css/editormd.min.css"/>
 </head>
 <body>
-{{ post._id }}
+
+<div class="alert alert-success" style="display:none" id="ok">
+    提交成功
+</div>
+
+<div class="input-group input-group-lg">
+    <div class="input-group-prepend">
+        <span class="input-group-text">Name</span>
+    </div>
+    <input type="text" class="form-control" aria-label="title" id="title" placeholder="{{ post.title }}">
+
+    <div class="input-group-prepend">
+        <div class="input-group-text">
+            顶置
+            <input type="checkbox" aria-label="stick" id="stick" {% if post.stick %} checked {% endif %}>
+        </div>
+        <div class="input-group-text">
+            评论
+            <input type="checkbox" aria-label="can_comment" id="can_comment" {% if post.can_comment %} checked {% endif
+                   %}>
+        </div>
+    </div>
+</div>
+
+<div id="editor">
+</div>
+
+<center>
+    <button type="button" class="btn btn-outline-success btn-lg" id="submit">提交</button>
+</center>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+        crossorigin="anonymous"></script>
+<script src="/static/editor.md/editormd.min.js"></script>
+
+<script type="text/javascript">
+    $(function () {
+        const editor = editormd("editor", {
+            width: "100%",
+            autoHeight: true,
+            emoji: true,
+            saveHTMLToTextarea: true,
+            flowChart: true,
+            markdown: "{{ post.body }}\n",
+            path: "/static/editor.md/lib/"
+        });
+
+        $("#submit").click(() => {
+            const title = $("#title").val().trim();
+            fetch("/api/post", {
+                body: eval('JSON.stringify({\n' +
+                    '                    is_new: {{ is_new }},\n' +
+                    '                    post: {\n' +
+                    '                        _id: "{{ post._id }}",\n' +
+                    '                        title: !title ? "{{ post.title }}" : title,\n' +
+                    '                        body: editor.getHTML(),\n' +
+                    '                        stick: $(\'#stick\').val() === \'on\',\n' +
+                    '                        can_comment: $(\'#can_comment\').val() === \'on\',\n' +
+                    '                        comments: [\n' +
+                    '                            {% for c in post.comments %}\n' +
+                    '                            {{ c }},\n' +
+                    '                            {% endfor %}\n' +
+                    '                        ],\n' +
+                    '                        create_time: {{ post.create_time }},\n' +
+                    '                        update_time: Math.floor(Date.now() / 1000)\n' +
+                    '                    }\n' +
+                    '                })'),
+                cache: 'no-cache',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                method: 'POST'
+            })
+                .then(resp => resp.status === 200)
+                .then(() => {
+                    let alert = $('#ok')
+                    alert.show()
+                    setTimeout(() => alert.hide(), 2000)
+                });
+        })
+
+    });
+</script>
 </body>
 </html>

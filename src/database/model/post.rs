@@ -102,12 +102,6 @@ impl Post {
     }
 
     pub fn to_doc(&self) -> Result<Document> {
-        let mut doc = to_bson(self).map(|b| b.as_document().expect("Cannot convert `Post` to document").to_owned())?;
-        // 如果id是默认生成的
-        if let PostId::Number(-1) = self._id {
-            // 去掉_id字段，避免数据库不自动生成id
-            doc.remove("_id");
-        }
-        Ok(doc)
+        Ok(to_bson(self).map(|b| b.as_document().expect("Cannot convert `Post` to document").to_owned())?)
     }
 }

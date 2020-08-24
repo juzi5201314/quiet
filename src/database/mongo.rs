@@ -149,8 +149,11 @@ impl DelPost for MongoDB {
 #[async_trait]
 impl AddPost for MongoDB {
     async fn add_post(&self, post: &Post) -> Result<PostId> {
+        let mut doc = post.to_doc()?;
+        // 去掉_id字段，由数据库自动生成
+        doc.remove("_id");
         let id: Bson = self.get_posts_collection()
-            .insert_one(post.to_doc()?, None)
+            .insert_one(doc, None)
             .await?.inserted_id;
         Ok(PostId::String(id.as_object_id().ok_or(Error::None("ObjectId".to_owned()))?.to_string()))
     }

@@ -11,5 +11,6 @@ pub struct IndexTemplate {
 #[derive(Template)]
 #[template(path = "editor.html")]
 pub struct EditorTemplate {
+    pub is_new: bool,
     pub post: Post
 }

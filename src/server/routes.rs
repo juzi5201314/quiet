@@ -28,11 +28,13 @@ pub async fn index() -> error::Result<impl Responder> {
 #[get("/editor/{id}")]
 pub async fn editor(web::Path((id)): web::Path<(String)>) -> error::Result<impl Responder> {
     let post = map_err!(Post::get(&PostId::from(id.as_str())).await);
-    if post.as_ref().unwrap_or(&None).is_none() && id != "new" {
-        map_err!(Err("Post does not exist."))?
+    let is_new = id == "new";
+    if post.as_ref().unwrap_or(&None).is_none() && !is_new {
+        return Err(error::ErrorNotFound("Post does not exist."))
     }
     let post = post.unwrap_or(None).unwrap_or_else(|| Post::new("", "", false, true));
     let temp = EditorTemplate {
+        is_new,
         post,
     };
 
@@ -50,6 +52,16 @@ struct EditPost {
 
 #[post("/post")]
 pub async fn edit_post(data: web::Json<EditPost>) -> error::Result<impl Responder> {
+    if data.is_new {
+        map_err!(Post::add(&data.post).await)?;
+    } else {
+        let has_post = map_err!(Post::get(&data.post._id).await).unwrap_or_default().is_some();
+        if has_post {
+            map_err!(data.post.update().await)?
+        } else {
+            return Err(error::ErrorNotFound("Post does not exist."))
+        }
+    }
 
-    Ok("")
+    Ok(HttpResponse::Ok())
 }
